@@ -1,0 +1,262 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    width: 350px;
+    background: #1a1a2e;
+    color: #eee;
+}
+
+.container {
+    padding: 15px;
+}
+
+h1 {
+    color: #ff0000;
+    font-size: 18px;
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.youtube-icon {
+    width: 28px;
+    height: 28px;
+}
+
+.form-group {
+    margin-bottom: 12px;
+    position: relative;
+}
+
+label {
+    display: block;
+    margin-bottom: 5px;
+    font-size: 12px;
+    color: #aaa;
+}
+
+input[type="text"] {
+    width: 100%;
+    padding: 10px;
+    padding-right: 50px;
+    border: 1px solid #333;
+    background: #16213e;
+    color: #fff;
+    border-radius: 6px;
+    font-size: 13px;
+}
+
+input[type="text"]:focus {
+    outline: none;
+    border-color: #ff0000;
+}
+
+input[type="text"]::placeholder {
+    color: #666;
+}
+
+.btn-auto {
+    position: absolute;
+    right: 5px;
+    top: 24px;
+    padding: 6px 10px;
+    background: #e94560;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 11px;
+    cursor: pointer;
+}
+
+.btn-auto:hover {
+    background: #ff6b6b;
+}
+
+button {
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.btn-primary {
+    width: 100%;
+    padding: 12px;
+    background: linear-gradient(135deg, #ff0000, #cc0000);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+.btn-primary:hover:not(:disabled) {
+    background: linear-gradient(135deg, #ff3333, #ff0000);
+    transform: translateY(-1px);
+}
+
+.download-btn {
+    margin-top: 5px;
+}
+
+.progress-container {
+    margin-top: 15px;
+    display: none;
+}
+
+.progress-bar {
+    width: 100%;
+    height: 8px;
+    background: #16213e;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #ff0000, #ff6666);
+    width: 0%;
+    transition: width 0.3s;
+}
+
+.progress-text {
+    text-align: center;
+    margin-top: 5px;
+    font-size: 12px;
+    color: #aaa;
+}
+
+.status {
+    margin-top: 10px;
+    padding: 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    display: none;
+}
+
+.status.downloading {
+    background: #0f3460;
+    border: 1px solid #3794ff;
+    display: block;
+}
+
+.status.completed {
+    background: #1e5128;
+    border: 1px solid #4caf50;
+    display: block;
+}
+
+.status.error {
+    background: #5c1a1a;
+    border: 1px solid #f44336;
+    display: block;
+}
+
+.tips {
+    margin-top: 15px;
+    padding: 10px;
+    background: #16213e;
+    border-radius: 6px;
+    font-size: 11px;
+    color: #888;
+}
+
+.tips p {
+    margin-bottom: 5px;
+    color: #aaa;
+}
+
+.tips ul {
+    margin-left: 15px;
+}
+
+.tips li {
+    margin: 3px 0;
+}
+
+/* Queue Section */
+.queue-section {
+    margin-top: 15px;
+}
+
+.queue-section h3 {
+    font-size: 13px;
+    color: #aaa;
+    margin-bottom: 10px;
+    padding-bottom: 5px;
+    border-bottom: 1px solid #333;
+}
+
+.queue-list {
+    max-height: 250px;
+    overflow-y: auto;
+}
+
+.queue-item {
+    background: #16213e;
+    border-radius: 6px;
+    padding: 10px;
+    margin-bottom: 8px;
+    border-left: 3px solid #3794ff;
+}
+
+.queue-item.completed {
+    border-left-color: #4caf50;
+}
+
+.queue-item.error {
+    border-left-color: #f44336;
+}
+
+.queue-item-title {
+    font-size: 12px;
+    color: #fff;
+    margin-bottom: 6px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.queue-item-progress {
+    height: 4px;
+    background: #0f3460;
+    border-radius: 2px;
+    overflow: hidden;
+    margin-bottom: 4px;
+}
+
+.queue-item-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #ff0000, #ff6666);
+    transition: width 0.3s;
+}
+
+.queue-item.completed .queue-item-progress-fill {
+    background: #4caf50;
+}
+
+.queue-item.error .queue-item-progress-fill {
+    background: #f44336;
+}
+
+.queue-item-status {
+    font-size: 10px;
+    color: #888;
+}
+
+.queue-item.completed .queue-item-status {
+    color: #4caf50;
+}
+
+.queue-item.error .queue-item-status {
+    color: #f44336;
+}

@@ -1,0 +1,18 @@
+{
+  "manifest_version": 3,
+  "name": "YouTube Video Downloader",
+  "version": "1.0.0",
+  "description": "Download single YouTube video using yt-dlp",
+  "permissions": [
+    "activeTab",
+    "storage",
+    "downloads"
+  ],
+  "host_permissions": [
+    "http://emma.ntvcloud.com/*",
+    "http://localhost:1101/*"
+  ],
+  "action": {
+    "default_popup": "popup.html"
+  }
+}
