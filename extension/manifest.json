@@ -9,7 +9,7 @@
     "downloads"
   ],
   "host_permissions": [
-    "http://emma.ntvcloud.com/*",
+    "https://emma.ntvcloud.com/*",
     "http://localhost:1101/*"
   ],
   "action": {

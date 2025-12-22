@@ -104,6 +104,7 @@ def run_download(task_id, url, folder):
             '-o', output_template,
             '--newline',
             '--progress',
+            '--extractor-args', 'youtube:player_client=web',
             url
         ]
 
