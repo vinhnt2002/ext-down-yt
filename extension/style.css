@@ -261,6 +261,91 @@ button:disabled {
     color: #f44336;
 }
 
+/* Cookies Section */
+.cookies-section {
+    margin-top: 15px;
+    padding: 10px;
+    background: #16213e;
+    border-radius: 6px;
+    border: 1px dashed #333;
+}
+
+.cookies-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.cookies-status {
+    font-size: 11px;
+    color: #888;
+}
+
+.cookies-status.active {
+    color: #4caf50;
+}
+
+.cookies-status.error {
+    color: #f44336;
+}
+
+.btn-cookies {
+    padding: 6px 12px;
+    background: #0f3460;
+    color: #fff;
+    border: 1px solid #3794ff;
+    border-radius: 4px;
+    font-size: 11px;
+    cursor: pointer;
+}
+
+.btn-cookies:hover {
+    background: #1a4a7a;
+}
+
+.cookies-input-area {
+    margin-top: 10px;
+}
+
+.cookies-input-area textarea {
+    width: 100%;
+    height: 120px;
+    padding: 8px;
+    background: #0f3460;
+    border: 1px solid #333;
+    border-radius: 4px;
+    color: #fff;
+    font-family: monospace;
+    font-size: 10px;
+    resize: vertical;
+}
+
+.cookies-input-area textarea:focus {
+    outline: none;
+    border-color: #3794ff;
+}
+
+.btn-save-cookies {
+    width: 100%;
+    margin-top: 8px;
+    padding: 8px;
+    background: linear-gradient(135deg, #4caf50, #388e3c);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+.btn-save-cookies:hover {
+    background: linear-gradient(135deg, #66bb6a, #4caf50);
+}
+
+.btn-save-cookies:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
 /* Footer */
 .footer {
     margin-top: 15px;

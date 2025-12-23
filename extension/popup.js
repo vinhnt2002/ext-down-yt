@@ -5,14 +5,28 @@ document.addEventListener('DOMContentLoaded', function() {
     const autoFillBtn = document.getElementById('autoFillBtn');
     const queueList = document.getElementById('queueList');
     const queueCount = document.getElementById('queueCount');
+    const cookiesStatus = document.getElementById('cookiesStatus');
+    const toggleCookiesBtn = document.getElementById('toggleCookiesBtn');
+    const cookiesInputArea = document.getElementById('cookiesInputArea');
+    const cookiesTextarea = document.getElementById('cookiesTextarea');
+    const saveCookiesBtn = document.getElementById('saveCookiesBtn');
 
     // Store all active downloads
     let downloads = {};
     let pollInterval = null;
 
+    // Saved cookies (stored locally in extension)
+    let savedCookies = '';
+
     // Load saved settings
-    chrome.storage.local.get(['server'], function(data) {
+    chrome.storage.local.get(['server', 'cookies'], function(data) {
         if (data.server) serverInput.value = data.server;
+        if (data.cookies) {
+            savedCookies = data.cookies;
+            updateCookiesStatusLocal(true);
+        } else {
+            updateCookiesStatusLocal(false);
+        }
     });
 
     // Auto fill URL from current tab
@@ -96,13 +110,18 @@ document.addEventListener('DOMContentLoaded', function() {
         queueList.insertAdjacentHTML('beforeend', itemHtml);
         updateQueueCount();
 
-        // Start download on server
+        // Start download on server (include cookies if available)
+        const requestBody = { url: url };
+        if (savedCookies) {
+            requestBody.cookies = savedCookies;
+        }
+
         fetch(server + '/download-async', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ url: url })
+            body: JSON.stringify(requestBody)
         })
         .then(response => response.json())
         .then(data => {
@@ -172,6 +191,54 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
+
+    // Cookies functions - stored locally in extension
+    function updateCookiesStatusLocal(hasCookies) {
+        if (hasCookies) {
+            cookiesStatus.textContent = '🟢 Cookies OK';
+            cookiesStatus.className = 'cookies-status active';
+        } else {
+            cookiesStatus.textContent = '🔴 Chưa có cookies';
+            cookiesStatus.className = 'cookies-status error';
+        }
+    }
+
+    // Toggle cookies input area
+    toggleCookiesBtn.addEventListener('click', function() {
+        if (cookiesInputArea.style.display === 'none') {
+            cookiesInputArea.style.display = 'block';
+            toggleCookiesBtn.textContent = 'Ẩn';
+        } else {
+            cookiesInputArea.style.display = 'none';
+            toggleCookiesBtn.textContent = 'Cập nhật Cookies';
+        }
+    });
+
+    // Save cookies locally in extension storage
+    saveCookiesBtn.addEventListener('click', function() {
+        const cookiesContent = cookiesTextarea.value.trim();
+
+        if (!cookiesContent) {
+            alert('Vui lòng paste nội dung cookies!');
+            return;
+        }
+
+        // Validate cookies format
+        if (!cookiesContent.includes('.youtube.com') && !cookiesContent.includes('# Netscape')) {
+            alert('Định dạng cookies không hợp lệ!\nCần có dạng Netscape HTTP Cookie File.');
+            return;
+        }
+
+        // Save to extension local storage
+        savedCookies = cookiesContent;
+        chrome.storage.local.set({ cookies: cookiesContent }, function() {
+            alert('Đã lưu cookies! Cookies sẽ được gửi kèm mỗi lần tải video.');
+            cookiesTextarea.value = '';
+            cookiesInputArea.style.display = 'none';
+            toggleCookiesBtn.textContent = 'Cập nhật Cookies';
+            updateCookiesStatusLocal(true);
+        });
+    });
 
     function startPolling() {
         pollInterval = setInterval(() => {

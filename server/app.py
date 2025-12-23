@@ -53,6 +53,7 @@ def download_async():
     """
     Start async download and return task ID
     Video will be downloaded to server temp folder
+    Cookies can be sent with request for authentication
     """
     data = request.get_json()
 
@@ -60,6 +61,7 @@ def download_async():
         return jsonify({'success': False, 'error': 'No data provided'}), 400
 
     url = data.get('url')
+    cookies_content = data.get('cookies')  # Cookies from extension
 
     if not url:
         return jsonify({'success': False, 'error': 'URL is required'}), 400
@@ -73,17 +75,25 @@ def download_async():
     task_folder = os.path.join(TEMP_DIR, task_id)
     os.makedirs(task_folder, exist_ok=True)
 
+    # Save cookies to task folder if provided
+    task_cookies_file = None
+    if cookies_content:
+        task_cookies_file = os.path.join(task_folder, 'cookies.txt')
+        with open(task_cookies_file, 'w', encoding='utf-8') as f:
+            f.write(cookies_content)
+
     downloads[task_id] = {
         'status': 'pending',
         'progress': 0,
         'message': 'Starting download...',
         'filename': None,
         'filepath': None,
-        'folder': task_folder
+        'folder': task_folder,
+        'cookies_file': task_cookies_file
     }
 
     # Start download in background
-    thread = threading.Thread(target=run_download, args=(task_id, url, task_folder))
+    thread = threading.Thread(target=run_download, args=(task_id, url, task_folder, task_cookies_file))
     thread.start()
 
     return jsonify({
@@ -93,7 +103,7 @@ def download_async():
     })
 
 
-def run_download(task_id, url, folder):
+def run_download(task_id, url, folder, cookies_file=None):
     """Background download task"""
     try:
         downloads[task_id]['status'] = 'downloading'
@@ -109,8 +119,10 @@ def run_download(task_id, url, folder):
             '--progress',
         ]
 
-        # Add cookies if file exists
-        if os.path.exists(COOKIES_FILE):
+        # Add cookies - prefer task-specific cookies, fallback to server cookies
+        if cookies_file and os.path.exists(cookies_file):
+            cmd.extend(['--cookies', cookies_file])
+        elif os.path.exists(COOKIES_FILE):
             cmd.extend(['--cookies', COOKIES_FILE])
 
         cmd.append(url)
