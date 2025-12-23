@@ -104,7 +104,10 @@ def run_download(task_id, url, folder):
             '-o', output_template,
             '--newline',
             '--progress',
-            '--extractor-args', 'youtube:player_client=web',
+            '--extractor-args', 'youtube:player_client=android',
+            '--user-agent', 'Mozilla/5.0 (Linux; Android 10; SM-G981B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.162 Mobile Safari/537.36',
+            '--no-check-certificates',
+            '--geo-bypass',
             url
         ]
 
