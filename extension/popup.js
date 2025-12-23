@@ -11,9 +11,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const cookiesTextarea = document.getElementById('cookiesTextarea');
     const saveCookiesBtn = document.getElementById('saveCookiesBtn');
 
-    // Store all active downloads
-    let downloads = {};
-    let pollInterval = null;
+    // Track item IDs for UI updates
+    let itemIds = {};
 
     // Saved cookies (stored locally in extension)
     let savedCookies = '';
@@ -26,6 +25,33 @@ document.addEventListener('DOMContentLoaded', function() {
             updateCookiesStatusLocal(true);
         } else {
             updateCookiesStatusLocal(false);
+        }
+    });
+
+    // Get existing downloads from background
+    chrome.runtime.sendMessage({ action: 'getDownloads' }, function(response) {
+        if (response && response.downloads) {
+            Object.keys(response.downloads).forEach(taskId => {
+                const download = response.downloads[taskId];
+                if (!document.getElementById(download.itemId)) {
+                    // Recreate UI for existing downloads
+                    createQueueItemUI(download.itemId, download.url);
+                    itemIds[taskId] = download.itemId;
+                    updateQueueItemFromDownload(download);
+                }
+            });
+            updateQueueCount();
+        }
+    });
+
+    // Listen for updates from background
+    chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+        if (message.action === 'downloadUpdate') {
+            Object.keys(message.downloads).forEach(taskId => {
+                const download = message.downloads[taskId];
+                updateQueueItemFromDownload(download);
+            });
+            updateQueueCount();
         }
     });
 
@@ -93,11 +119,8 @@ document.addEventListener('DOMContentLoaded', function() {
         return match ? match[1] : url.substring(0, 20);
     }
 
-    function addToQueue(url, server) {
+    function createQueueItemUI(itemId, url) {
         const videoId = extractVideoId(url);
-
-        // Create queue item UI
-        const itemId = 'task-' + Date.now();
         const itemHtml = `
             <div class="queue-item" id="${itemId}">
                 <div class="queue-item-title" title="${url}">${videoId}</div>
@@ -108,6 +131,11 @@ document.addEventListener('DOMContentLoaded', function() {
             </div>
         `;
         queueList.insertAdjacentHTML('beforeend', itemHtml);
+    }
+
+    function addToQueue(url, server) {
+        const itemId = 'task-' + Date.now();
+        createQueueItemUI(itemId, url);
         updateQueueCount();
 
         // Start download on server (include cookies if available)
@@ -126,20 +154,21 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(response => response.json())
         .then(data => {
             if (data.success && data.task_id) {
-                // Store download info
-                downloads[data.task_id] = {
-                    itemId: itemId,
-                    url: url,
-                    server: server,
-                    downloaded: false
-                };
+                // Track itemId for this task
+                itemIds[data.task_id] = itemId;
+
+                // Send to background worker
+                chrome.runtime.sendMessage({
+                    action: 'startDownload',
+                    data: {
+                        taskId: data.task_id,
+                        itemId: itemId,
+                        url: url,
+                        server: server
+                    }
+                });
 
                 updateQueueItem(itemId, 0, 'Đang tải trên server...');
-
-                // Start polling if not already running
-                if (!pollInterval) {
-                    startPolling();
-                }
             } else {
                 updateQueueItem(itemId, 0, 'Lỗi: ' + (data.error || 'Unknown'), 'error');
             }
@@ -147,6 +176,20 @@ document.addEventListener('DOMContentLoaded', function() {
         .catch(error => {
             updateQueueItem(itemId, 0, 'Lỗi kết nối: ' + error.message, 'error');
         });
+    }
+
+    function updateQueueItemFromDownload(download) {
+        const itemId = download.itemId;
+        const progress = download.progress || 0;
+        const status = download.status;
+        const message = download.message || '';
+
+        let statusClass = '';
+        if (status === 'completed') statusClass = 'completed';
+        else if (status === 'error') statusClass = 'error';
+        else if (status === 'downloading' && download.downloaded) statusClass = 'downloading-local';
+
+        updateQueueItem(itemId, progress, message, statusClass);
     }
 
     function updateQueueItem(itemId, progress, status, statusClass) {
@@ -172,24 +215,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function updateQueueCount() {
         queueCount.textContent = queueList.children.length;
-    }
-
-    function triggerDownloadToLocal(server, taskId, filename) {
-        // Create download link and trigger it
-        const downloadUrl = server + '/download-file/' + taskId;
-
-        // Use Chrome downloads API
-        chrome.downloads.download({
-            url: downloadUrl,
-            filename: filename,
-            saveAs: true  // Ask user where to save
-        }, function(downloadId) {
-            if (chrome.runtime.lastError) {
-                console.error('Download error:', chrome.runtime.lastError);
-                // Fallback: open in new tab
-                window.open(downloadUrl, '_blank');
-            }
-        });
     }
 
     // Cookies functions - stored locally in extension
@@ -239,61 +264,4 @@ document.addEventListener('DOMContentLoaded', function() {
             updateCookiesStatusLocal(true);
         });
     });
-
-    function startPolling() {
-        pollInterval = setInterval(() => {
-            const taskIds = Object.keys(downloads);
-
-            if (taskIds.length === 0) {
-                clearInterval(pollInterval);
-                pollInterval = null;
-                return;
-            }
-
-            taskIds.forEach(taskId => {
-                const download = downloads[taskId];
-
-                // Skip if already triggered local download
-                if (download.downloaded) return;
-
-                fetch(download.server + '/status/' + taskId)
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            const progress = data.progress || 0;
-                            const status = data.status;
-                            const message = data.message || '';
-                            const filename = data.filename;
-                            const downloadReady = data.downloadReady;
-
-                            if (status === 'completed' && downloadReady && !download.downloaded) {
-                                // Server finished, trigger download to local
-                                download.downloaded = true;
-                                updateQueueItem(download.itemId, 100, 'Đang tải về máy: ' + filename, 'downloading-local');
-
-                                triggerDownloadToLocal(download.server, taskId, filename);
-
-                                // Mark as completed after a short delay
-                                setTimeout(() => {
-                                    updateQueueItem(download.itemId, 100, 'Hoàn thành: ' + filename, 'completed');
-                                    delete downloads[taskId];
-
-                                    // Cleanup on server
-                                    fetch(download.server + '/cleanup/' + taskId, { method: 'POST' });
-                                }, 2000);
-
-                            } else if (status === 'error') {
-                                updateQueueItem(download.itemId, progress, 'Lỗi: ' + message, 'error');
-                                delete downloads[taskId];
-                            } else if (status === 'downloading') {
-                                updateQueueItem(download.itemId, progress, message || 'Đang tải...');
-                            }
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Poll error for task ' + taskId + ':', error);
-                    });
-            });
-        }, 1000);
-    }
 });
