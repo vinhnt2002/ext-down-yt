@@ -221,34 +221,6 @@ def cleanup(task_id):
     return jsonify({'success': False, 'error': 'Task not found'}), 404
 
 
-@app.route('/upload-cookies', methods=['POST'])
-def upload_cookies():
-    """Upload cookies file from extension"""
-    data = request.get_json()
-
-    if not data or 'cookies' not in data:
-        return jsonify({'success': False, 'error': 'No cookies provided'}), 400
-
-    cookies_content = data.get('cookies')
-
-    try:
-        with open(COOKIES_FILE, 'w', encoding='utf-8') as f:
-            f.write(cookies_content)
-        return jsonify({'success': True, 'message': 'Cookies uploaded successfully'})
-    except Exception as e:
-        return jsonify({'success': False, 'error': str(e)}), 500
-
-
-@app.route('/cookies-status')
-def cookies_status():
-    """Check if cookies file exists"""
-    exists = os.path.exists(COOKIES_FILE)
-    return jsonify({
-        'success': True,
-        'hasCookies': exists
-    })
-
-
 if __name__ == '__main__':
     print("=" * 50)
     print("YouTube Downloader Server v2.0")

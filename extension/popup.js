@@ -5,9 +5,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const autoFillBtn = document.getElementById('autoFillBtn');
     const queueList = document.getElementById('queueList');
     const queueCount = document.getElementById('queueCount');
-    const cookiesStatus = document.getElementById('cookiesStatus');
-    const uploadCookiesBtn = document.getElementById('uploadCookiesBtn');
-    const cookiesFile = document.getElementById('cookiesFile');
 
     // Store all active downloads
     let downloads = {};
@@ -16,8 +13,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // Load saved settings
     chrome.storage.local.get(['server'], function(data) {
         if (data.server) serverInput.value = data.server;
-        // Check cookies status after loading server
-        checkCookiesStatus();
     });
 
     // Auto fill URL from current tab
@@ -177,85 +172,6 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
-
-    // Cookies functions
-    function checkCookiesStatus() {
-        const server = serverInput.value.trim();
-        if (!server) return;
-
-        fetch(server + '/cookies-status')
-            .then(response => response.json())
-            .then(data => {
-                if (data.success && data.hasCookies) {
-                    cookiesStatus.textContent = '🟢 Cookies OK';
-                    cookiesStatus.classList.add('active');
-                } else {
-                    cookiesStatus.textContent = '🔴 Chưa có cookies';
-                    cookiesStatus.classList.remove('active');
-                }
-            })
-            .catch(() => {
-                cookiesStatus.textContent = '⚪ Không kết nối được';
-                cookiesStatus.classList.remove('active');
-            });
-    }
-
-    // Upload cookies button
-    uploadCookiesBtn.addEventListener('click', function() {
-        cookiesFile.click();
-    });
-
-    // Handle file selection
-    cookiesFile.addEventListener('change', function(e) {
-        const file = e.target.files[0];
-        if (!file) return;
-
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            const cookiesContent = e.target.result;
-            uploadCookies(cookiesContent);
-        };
-        reader.readAsText(file);
-    });
-
-    function uploadCookies(cookiesContent) {
-        const server = serverInput.value.trim();
-        if (!server) {
-            alert('Vui lòng nhập Server URL trước!');
-            return;
-        }
-
-        uploadCookiesBtn.disabled = true;
-        uploadCookiesBtn.textContent = 'Đang upload...';
-
-        fetch(server + '/upload-cookies', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ cookies: cookiesContent })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                alert('Upload cookies thành công!');
-                checkCookiesStatus();
-            } else {
-                alert('Lỗi: ' + (data.error || 'Upload thất bại'));
-            }
-        })
-        .catch(error => {
-            alert('Lỗi kết nối: ' + error.message);
-        })
-        .finally(() => {
-            uploadCookiesBtn.disabled = false;
-            uploadCookiesBtn.textContent = '📤 Upload Cookies';
-            cookiesFile.value = '';  // Reset file input
-        });
-    }
-
-    // Re-check cookies when server changes
-    serverInput.addEventListener('change', checkCookiesStatus);
 
     function startPolling() {
         pollInterval = setInterval(() => {
