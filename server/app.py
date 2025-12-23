@@ -24,6 +24,9 @@ downloads = {}
 TEMP_DIR = tempfile.mkdtemp(prefix='ytdl_')
 print(f"Temp directory: {TEMP_DIR}")
 
+# Cookies file path (for YouTube authentication)
+COOKIES_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'cookies.txt')
+
 
 @app.route('/')
 def index():
@@ -104,12 +107,13 @@ def run_download(task_id, url, folder):
             '-o', output_template,
             '--newline',
             '--progress',
-            '--extractor-args', 'youtube:player_client=android',
-            '--user-agent', 'Mozilla/5.0 (Linux; Android 10; SM-G981B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.162 Mobile Safari/537.36',
-            '--no-check-certificates',
-            '--geo-bypass',
-            url
         ]
+
+        # Add cookies if file exists
+        if os.path.exists(COOKIES_FILE):
+            cmd.extend(['--cookies', COOKIES_FILE])
+
+        cmd.append(url)
 
         process = subprocess.Popen(
             cmd,
