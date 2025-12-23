@@ -150,8 +150,8 @@ def run_download(task_id, url, folder, cookies_file=None):
         process.wait()
 
         if process.returncode == 0:
-            # Find downloaded file
-            files = os.listdir(folder)
+            # Find downloaded file (exclude cookies.txt)
+            files = [f for f in os.listdir(folder) if f != 'cookies.txt']
             if files:
                 filename = files[0]
                 filepath = os.path.join(folder, filename)
