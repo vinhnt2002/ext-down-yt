@@ -1,8 +1,9 @@
 {
   "manifest_version": 3,
   "name": "YouTube Video Downloader",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Download single YouTube video using yt-dlp",
+  "author": "Vinhnt",
   "permissions": [
     "activeTab",
     "storage",
